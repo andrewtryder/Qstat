@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2012, none
+# Copyright (c) 2013. spline
 # All rights reserved.
 #
 #
@@ -21,7 +21,6 @@ def configure(advanced):
 
 
 QStat = conf.registerPlugin('QStat')
-# This is where your configuration variables (if any) should go.  For example:
 conf.registerGlobalValue(QStat, 'qstatPath', registry.String('/home/spline/.local/bin/qstat', _("""Path to qstat.""")))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=179:
