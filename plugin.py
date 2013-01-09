@@ -7,7 +7,7 @@
 
 # my libs
 import os
-import sys
+import subprocess
 try:
     import xml.etree.cElementTree as ElementTree
 except ImportError:
@@ -33,45 +33,112 @@ class QStat(callbacks.Plugin):
         self.__parent = super(QStat, self)
         self.__parent.__init__(irc)
         self.qstatpath = self.registryValue('qstatPath')
-        
-    def _verify(self):
-        """Verify that the application is accessible."""
-        try:
-            pipe = os.popen("%s 2> /dev/null" % self.qstatpath)
-            try:
-                if not pipe.read():
-                    self.log.error("QStat application not accessible")
-            finally:
-                pipe.close()
-                self.log.info(("qstat found at: %s") % (self.qstatpath))
-        except IOError:
-            self.log.error("QStat communication interrupted.")
+    
+    def _qstatgames(self, optgame):
+        """Check for valid games."""
+        qstatgames = ['a2s','ams','bfbc2','bfs','cod2m','cod2s','cod4m','cod4s','codm','cods','crs','crysis','cube2',
+        'd3g','d3m','d3p','d3s','dm3m','dm3s','efm','efs','etqws','eye','fcs','fls','gps','grs','gs2','gs3',
+        'gs4','gsm','h2s','hazes','hl2s','hla2s','hla2sm','hlm','hlqs','hls','hrs','hwm','hws','iourtm','iourts',
+        'jk3m','jk3s','kps','maqs','mas','mhs','mumble','netp','netpm','nexuizm','nexuizs','openarenam','openarenas',
+        'ottdm','ottds','preym','preys','prs','q2m','q2s','q3m','q3s','q4m','q4s','qs','qwm','qws','rss','rwm','rws',
+        'sas','sfs','sgs','sms','sns','sof2m','sof2m1.0','sof2s','stm','stma2s','stmhl2','t2m','t2s','tbm','tbs','tee',
+        'terraria','tm','tremulous','tremulousm','ts2','ts3','uns','ut2004m','ut2004s','ut2s','ut3s','ventrilo','warsowm',
+        'warsows','waws','wics','woetm','woets','wolfs']
+        if optgame in qstatgames:
+            return True
+        else:
+            return False
+         
+    def verify(self, irc, msg, args):
+        verification = self._verify()
+        irc.reply(str(verification))
+    verify = wrap(verify)
 
-    def _qstat(self, type, name, port=None):
-        """invoke qstat against a specified server."""
+    def statMaster(self, type, name, gametype, port=None):
+        """invoke qstat against a specified master server."""
         if port is None:
             address = name
         else:
             address = '%s:%d' % (name, port)
-        pipe = os.popen("%s -xml -%s %s -utf8 -P -R 2> /dev/null" % (self.qstatpath, type, address))
+        #-sort		sort servers and/or players
+        #-u		only display servers that are up
+        #-nf		do not display full servers
+        #-ne		do not display empty servers
+        #-nh		do not display header line.        
+        self.log.info("Getting server list.")
+        pipe = os.popen("%s -xml -%s,game=%s,status=notempty %s 2> /dev/null" % (self.path, type, gametype, address))
         try:
-            return pipe.read()
+            return self.populate_master(pipe)
         finally:
             pipe.close()
+        
+    def _verify(self):
+        """Verify that the application is accessible and works."""
+        if not os.path.isfile(self.qstatpath) and not os.access(self.qstatpath, os.X_OK):
+            self.log.info("ERROR: {0} either not found or not executable".format(self.qstatpath))
+            return False
+        else:
+            return True
+    
+    def _qstat(self, opttype, optserver, optport=None):
+        """invoke qstat against a specified server."""
+        # handle server or server:port
+        if optport is None:
+            address = optserver
+        else:
+            address = '%s:%d' % (optserver, optport)
+        # work with type
+        opttype = '-'+opttype
+        
+        # build the command.
+        command = [self.qstatpath,'-utf8','-xml','-timeout','10',opttype,address,'-P','-R']
+        
+        # try to execute.
+        try:
+            proc = subprocess.Popen(command,shell=False,close_fds=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        except OSError, e:
+            self.log.error("Process error: %s" % e)
+            return None
+        
+        # process the output.
+        proc.wait()
+        if proc.returncode is not 0:
+            self.log.error("Process error: return code %s - output: %s" % (proc.stderr.readline().strip(),proc.returncode))
+            return None
+        else:
+            out = proc.communicate()[0]
+            lines = filter(None, out.splitlines())
+            if lines[0] != '<?xml version="1.0" encoding="UTF-8"?>':
+                self.log.error("I did not find the XML header I needed. Output: %s" % out)
+                return None
+            else:
+                return out.strip()
 
     def qstat(self, irc, msg, args, optlist, opttype, optserver):
         """[--players] <server type> <server name>
         Use qstat to query a server type.
         """
 
+        # first, check if qstat works.
+        if not self._verify():
+            irc.reply("I cannot execute qstat. Please check the qstatPath config variable.")
+            return
+
+        # arguments for output.
         args = {'showPlayers':False}
         
+        # handle optlist (getopts)
         if optlist:
             for (key, value) in optlist:
                 if key == 'showplayers':
                     args['showPlayers'] = True
 
+        # execute qstat and process XML.
         qstatxml = self._qstat(opttype, optserver)
+        if qstatxml is None:
+            irc.reply("ERROR trying to query: %s. Check the logs" % optserver)
+            return
+            
         root = ElementTree.fromstring(qstatxml)
         
         if root.tag != "qstat":
@@ -95,7 +162,6 @@ class QStat(callbacks.Plugin):
         # rest of the dicts for output.
         players = {}
         rules = {}
-
         # iterate through the rest.
         for child in root.find('server'):
             if child.tag == "players": # handle players.
