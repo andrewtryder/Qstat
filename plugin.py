@@ -34,7 +34,7 @@ class QStat(callbacks.Plugin):
         self.__parent.__init__(irc)
         self.qstatpath = self.registryValue('qstatPath')
     
-    def _qstatgames(self, optgame):
+    def _qstatgames(self, game=None):
         """Check for valid games."""
         qstatgames = ['a2s','ams','bfbc2','bfs','cod2m','cod2s','cod4m','cod4s','codm','cods','crs','crysis','cube2',
         'd3g','d3m','d3p','d3s','dm3m','dm3s','efm','efs','etqws','eye','fcs','fls','gps','grs','gs2','gs3',
@@ -44,16 +44,13 @@ class QStat(callbacks.Plugin):
         'sas','sfs','sgs','sms','sns','sof2m','sof2m1.0','sof2s','stm','stma2s','stmhl2','t2m','t2s','tbm','tbs','tee',
         'terraria','tm','tremulous','tremulousm','ts2','ts3','uns','ut2004m','ut2004s','ut2s','ut3s','ventrilo','warsowm',
         'warsows','waws','wics','woetm','woets','wolfs']
-        if optgame in qstatgames:
+        if not game:
+            return qstatgames
+        elif game in qstatgames:
             return True
         else:
             return False
          
-    def verify(self, irc, msg, args):
-        verification = self._verify()
-        irc.reply(str(verification))
-    verify = wrap(verify)
-
     def statMaster(self, type, name, gametype, port=None):
         """invoke qstat against a specified master server."""
         if port is None:
@@ -123,6 +120,11 @@ class QStat(callbacks.Plugin):
         if not self._verify():
             irc.reply("I cannot execute qstat. Please check the qstatPath config variable.")
             return
+        
+        # second, check gametype
+        if self._qstatgames(game=opttype) is False:
+            irc.reply("ERROR: Game type must be one of {0}".format(self._qstatgames()))
+            return
 
         # arguments for output.
         args = {'showPlayers':False,'showRules':False}
@@ -187,7 +189,7 @@ class QStat(callbacks.Plugin):
             playerlist = [v['name']+"("+str(k)+")" for (k,v) in sorted(players.iteritems(),key=players.get('score'),reverse=True)]
             irc.reply("Players({0}) :: {1}".format(len(players)," | ".join(playerlist)))
         if args['showRules']:
-            irc.reply(str(rules))
+            irc.reply("Rules :: {0}".format(" | ".join([k + ": " + v for (k,v) in rules.iteritems()])))
 
     qstat = wrap(qstat, [getopts({'players':'','rules':''}), ('somethingWithoutSpaces'), ('somethingWithoutSpaces')])
 
