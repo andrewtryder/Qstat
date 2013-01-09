@@ -9,13 +9,19 @@ Description
 
 Instructions
     
-    First, you need to set the config.py variable to where qstat is located.
-    Many distributions have outdated versions, years old, so grabbing their latest svn branch and compiling is best. 
+    First, you need to set the config.py variable to where qstat is located. This is critical.
+    We do some checks to see if it works but debugging can be tricky.
+    
+    IMPORTANT: Many distributions, including my Debian and Ubuntu setups, have a "qstat" program
+    that looks like the latest at 2.12. There have been minor changes over the years commited to the
+    trunk version of qstat on their SVN repo @ SF. I cannot emphasize running this enough because
+    they not only added in many newer games, including Urban Terror, which I use it for, but fixed
+    some annoying bugs.
     
     You can grab it via: 
     
-    https://qstat.svn.sourceforge.net/svnroot/qstat/trunk/qstat2
+    svn co https://qstat.svn.sourceforge.net/svnroot/qstat/trunk/qstat2 qstat2
     
-    Compile and install (beyond the scope of these instructions and document)
+    Compile and install. 
     
     Once installed, you need to configure plugins.QStat.qstatPath /full/path/to/qstat/executable

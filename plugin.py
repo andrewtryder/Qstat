@@ -125,13 +125,15 @@ class QStat(callbacks.Plugin):
             return
 
         # arguments for output.
-        args = {'showPlayers':False}
+        args = {'showPlayers':False,'showRules':False}
         
         # handle optlist (getopts)
         if optlist:
             for (key, value) in optlist:
-                if key == 'showplayers':
+                if key == 'players':
                     args['showPlayers'] = True
+                if key == 'rules':
+                    args['showRules'] = True
 
         # execute qstat and process XML.
         qstatxml = self._qstat(opttype, optserver)
@@ -140,7 +142,6 @@ class QStat(callbacks.Plugin):
             return
             
         root = ElementTree.fromstring(qstatxml)
-        
         if root.tag != "qstat":
             irc.reply("Something went horribly wrong running qstat.")
             return
@@ -167,21 +168,28 @@ class QStat(callbacks.Plugin):
             if child.tag == "players": # handle players.
                 for childchildren in child.getchildren():
                     tmpdict = {}
-                    tmpdict['name'] = childchildren.find('name').text
-                    tmpdict['score'] = childchildren.find('score').text
+                    tmpdict['name'] = ircutils.bold(childchildren.find('name').text)
+                    tmpdict['score'] = int(childchildren.find('score').text)
                     tmpdict['ping'] = childchildren.find('ping').text
-                    players[tmpdict['name']] = tmpdict
+                    players[tmpdict['score']] = tmpdict
             elif child.tag == "rules": # handle rules
                 for childchildren in child.getchildren():
                     rules[childchildren.get('name')] = childchildren.text
             else:
                 output[child.tag] = child.text
 
-        irc.reply(str(output))
-        irc.reply(str(players))
-        irc.reply(str(rules))
+        output['playerperc'] = "{0:.1f}%".format((float(output['numplayers'])/float(output['maxplayers'])) * 100)
 
-    qstat = wrap(qstat, [getopts({'players': ''}), ('somethingWithoutSpaces'), ('somethingWithoutSpaces')])
+        # now, lets actually output.
+        irc.reply("Server: {0}({1})  Name: {2}  Map: {3}  Players: {4}/{5} ({6})  Ping: {7}ms".format(output['hostname'],\
+            output['gametype'],output['name'],output['map'],output['numplayers'],output['maxplayers'],output['playerperc'],output['ping']))
+        if args['showPlayers']:
+            playerlist = [v['name']+"("+str(k)+")" for (k,v) in sorted(players.iteritems(),key=players.get('score'),reverse=True)]
+            irc.reply("Players({0}) :: {1}".format(len(players)," | ".join(playerlist)))
+        if args['showRules']:
+            irc.reply(str(rules))
+
+    qstat = wrap(qstat, [getopts({'players':'','rules':''}), ('somethingWithoutSpaces'), ('somethingWithoutSpaces')])
 
 Class = QStat
 
