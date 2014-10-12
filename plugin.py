@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2013, spline
+# Copyright (c) 2012-2014, spline
 # All rights reserved.
 #
 #
@@ -33,17 +33,73 @@ class QStat(callbacks.Plugin):
         self.__parent = super(QStat, self)
         self.__parent.__init__(irc)
         self.qstatpath = self.registryValue('qstatPath')
-    
+
+    def _qstatmasters(self, game=None):
+        qstatmasters = {
+            'cod2m':'Call of Duty 2 Master server','cod4m':'Call of Duty 4 Master server',
+            'codm':'Call of Duty Master server','d3m':'Descent3 Master (PXO) server',
+            'dm3m':'Doom 3 Master server','gsm':'Gamespy Master server',
+            'hla2sm':'Steam Master server','hlm':'Half-Life Master server',
+            'hwm':'HexenWorld Master server','iourtm':'ioUrbanTerror Master server',
+            'netpm':'NetPanzer Master server','nexuizm':'Nexuiz Master server',
+            'openarenam':'OpenArena Master server','ottdm':'openTTD Master server',
+            'preym':'Prey Master server','q2m':'Quake II Master server',
+            'q3m':'Quake III Master server','q4m':'Quake 4 Master server',
+            'qwm':'QuakeWorld Master server','rwm':'Return to Castle Wolfenstein Master server',
+            'sof2m':'SOF2 Master server','sof2m1.0':'SOF2 Master (1.0) server',
+            'stm':'Steam Master server','stma2s':'Steam Master for A2S server',
+            'stmhl2':'Steam Master for HL2 server','t2m':'Tribes 2 Master server',
+            'tbm':'Tribes Master server','ut2004m':'UT2004 Master server',
+            'warsowm':'Warsow Master server','woetm':'Enemy Territory Master server' }
+        if not game:
+            return qstatmasters
+        elif game in qstatmasters:
+            return True
+        else:
+            return False
+            
     def _qstatgames(self, game=None):
-        """Check for valid games."""
-        qstatgames = ['a2s','ams','bfbc2','bfs','cod2m','cod2s','cod4m','cod4s','codm','cods','crs','crysis','cube2',
-        'd3g','d3m','d3p','d3s','dm3m','dm3s','efm','efs','etqws','eye','fcs','fls','gps','grs','gs2','gs3',
-        'gs4','gsm','h2s','hazes','hl2s','hla2s','hla2sm','hlm','hlqs','hls','hrs','hwm','hws','iourtm','iourts',
-        'jk3m','jk3s','kps','maqs','mas','mhs','mumble','netp','netpm','nexuizm','nexuizs','openarenam','openarenas',
-        'ottdm','ottds','preym','preys','prs','q2m','q2s','q3m','q3s','q4m','q4s','qs','qwm','qws','rss','rwm','rws',
-        'sas','sfs','sgs','sms','sns','sof2m','sof2m1.0','sof2s','stm','stma2s','stmhl2','t2m','t2s','tbm','tbs','tee',
-        'terraria','tm','tremulous','tremulousm','ts2','ts3','uns','ut2004m','ut2004s','ut2s','ut3s','ventrilo','warsowm',
-        'warsows','waws','wics','woetm','woets','wolfs']
+        qstatgames = {
+            'a2s':'Half-Life 2 new server','ams':"America's Army v2.x server",
+            'bfbc2':'Battlefield Bad Company 2 server','bfs':'BFRIS server',
+            'cod2s':'Call of Duty 2 server','cod4s':'Call of Duty 4 server',
+            'cods':'Call of Duty server','crs':'Command and Conquer: Renegade server',
+            'crysis':'Crysis server','cubes':'Sauerbraten server',
+            'd3g':'Descent3 Gamespy Protocol server','d3p':'Descent3 PXO protocol server',
+            'd3s':'Descent3 server','dm3s':'Doom 3 server',
+            'efm':'Star Trek: Elite Force server','efs':'Star Trek: Elite Force server',
+            'etqws':'QuakeWars server','eye':'All Seeing Eye Protocol server',
+            'fcs':'FarCry server','fls':'Frontlines-Fuel of War server',
+            'gps':'Gamespy Protocol server','grs':'Ghost Recon server',
+            'gs2':'Gamespy V2 Protocol server','gs3':'Gamespy V3 Protocol server',
+            'gs4':'Gamespy V4 Protocol server','h2s':'Hexen II server',
+            'hazes':'Haze Protocol server','hl2s':'Half-Life 2 server',
+            'hla2s':'Half-Life server','hlqs':'Half-Life server',
+            'hls':'Half-Life server','hrs	':'Heretic II server',
+            'hws':'HexenWorld server','iourts':'ioUrbanTerror server',
+            'jk3m':'Jedi Knight: Jedi Academy server','jk3s':'Jedi Knight: Jedi Academy server',
+            'kps':'Kingpin server','maqs':'Medal of Honor: Allied Assault (Q) server',
+            'mas':'Medal of Honor: Allied Assault server','mhs':'Medal of Honor: Allied Assault server',
+            'mumble':'Mumble server','netp':'NetPanzer server',
+            'nexuizs':'Nexuiz server','openarenas':'OpenArena server',
+            'ottds':'OpenTTD server','preys':'PREY server',
+            'prs':'Pariah server','q2s':'Quake II server',
+            'q3s':'Quake III: Arena server','q4s':'Quake 4 server',
+            'qs':'Quake server','qws':'QuakeWorld server',
+            'rss':'Ravenshield server','rws':'Return to Castle Wolfenstein server',
+            'sas':'Savage server','sfs':'Soldier of Fortune server',
+            'sgs':'Shogo: Mobile Armor Division server','sms':'Serious Sam server',
+            'sns':'Sin server','sof2s':'Soldier of Fortune 2 server',
+            't2s':'Tribes 2 server','tbs':'Tribes server',
+            'tee':'Teeworlds server','terraria':'Terraria server',
+            'tm':'TrackMania server','tremulous':'Tremulous server',
+            'tremulousm':'Tremulous Master server','ts2':'Teamspeak 2 server',
+            'ts3':'Teamspeak 3 server','uns':'Unreal server',
+            'ut2004s':'UT2004 server','ut2s':'Unreal Tournament 2003 server',
+            'ut3s':'UT3 server','vent':'Ventrilo server',
+            'warsows':'Warsow server','waws':'Call of Duty World at War server',
+            'wics':'World in Conflict server','woets':'Enemy Territory server',
+            'wolfs':'Wolfenstein server' }
         if not game:
             return qstatgames
         elif game in qstatgames:
@@ -51,24 +107,35 @@ class QStat(callbacks.Plugin):
         else:
             return False
          
-    def statMaster(self, type, name, gametype, port=None):
+    def _qstatmaster(self, opttype, optserver, optport=None):
         """invoke qstat against a specified master server."""
-        if port is None:
-            address = name
+        if optport is None:
+            address = optserver
         else:
-            address = '%s:%d' % (name, port)
-        #-sort		sort servers and/or players
-        #-u		only display servers that are up
-        #-nf		do not display full servers
-        #-ne		do not display empty servers
-        #-nh		do not display header line.        
-        self.log.info("Getting server list.")
-        pipe = os.popen("%s -xml -%s,game=%s,status=notempty %s 2> /dev/null" % (self.path, type, gametype, address))
+            address = '%s:%d' % (name,optport)
+        opttype = '-'+opttype
+        # build command
+        command = [self.qstatpath,'-utf8','xml','-timeout','10','-sort','n','-u','-ne',opttype,address]  
+        # try to execute.
         try:
-            return self.populate_master(pipe)
-        finally:
-            pipe.close()
-        
+            proc = subprocess.Popen(command,shell=False,close_fds=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+        except OSError, e:
+            self.log.error("Process error: %s" % e)
+            return None
+        # process the output.
+        proc.wait()
+        if proc.returncode is not 0:
+            self.log.error("Process error: return code %s - output: %s" % (proc.stderr.readline().strip(),proc.returncode))
+            return None
+        else:
+            out = proc.communicate()[0]
+            lines = filter(None, out.splitlines())
+            if lines[0] != '<?xml version="1.0" encoding="UTF-8"?>':
+                self.log.error("I did not find the XML header I needed. Output: %s" % out)
+                return None
+            else:
+                return out.strip()
+   
     def _verify(self):
         """Verify that the application is accessible and works."""
         if not os.path.isfile(self.qstatpath) and not os.access(self.qstatpath, os.X_OK):
@@ -110,9 +177,37 @@ class QStat(callbacks.Plugin):
                 return None
             else:
                 return out.strip()
+    
+    def qstatmaster(self, irc, msg, args, optlist, opttype, optserver):
+        """<server type> <masterservername>
+        Ex: iourtm master.urbanterror.info
+        """
+        
+        # first, check if qstat works.
+        if not self._verify():
+            irc.reply("I cannot execute qstat. Please check the qstatPath config variable.")
+            return
+        
+        # second, check gametype
+        if self._qstatmasters(game=opttype) is False:
+            irc.reply("ERROR: Game type must be one of {0}".format(self._qstatgames()))
+            return
+            
+        # execute qstat and process XML.
+        qstatxml = self._qstatmaster(opttype, optserver)
+        if qstatxml is None:
+            irc.reply("ERROR trying to query: %s. Check the logs" % optserver)
+            return
+            
+        root = ElementTree.fromstring(qstatxml)
+        if root.tag != "qstat":
+            irc.reply("Something went horribly wrong running qstat.")
+            return
+            
+    qstatmaster = wrap(qstatmaster, [getopts({}), ('somethingWithoutSpaces'), ('somethingWithoutSpaces')])
 
     def qstat(self, irc, msg, args, optlist, opttype, optserver):
-        """[--players] <server type> <server name>
+        """[--players|--rules] <server type> <server name>
         Use qstat to query a server type.
         """
 
