@@ -12,7 +12,6 @@ try:
     import xml.etree.cElementTree as ElementTree
 except ImportError:
     import xml.etree.ElementTree as ElementTree
-
 # supybot libs
 import supybot.utils as utils
 from supybot.commands import *
@@ -180,6 +179,7 @@ class QStat(callbacks.Plugin):
     
     def qstatmaster(self, irc, msg, args, optlist, opttype, optserver):
         """<server type> <masterservername>
+        
         Ex: iourtm master.urbanterror.info
         """
         
